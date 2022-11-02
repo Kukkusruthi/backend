@@ -7,6 +7,7 @@ const Mongoose=require("mongoose")
 const{productModel}=require("./productModel")
 const{userModel}=require("./src/model/userModel")
 const { adminModel } = require("./src/model/adminModel")
+const{ cartModel} = require("./src/model/cartModel")
 const app=Express()
 app.use(Cors())
 app.use(Bodyparser.urlencoded({extended:true}))
@@ -18,7 +19,8 @@ Mongoose.connect("mongodb+srv://sruthi:sruthikukku@cluster0.9ku0d77.mongodb.net/
 
 app.post("/Frontpage", async(req, res) => {
     const request = req.body
-    userModel.findOne({ email: request.email }, (err,  regdata) => {
+    console.log(req.body)
+    userModel.findOne({ email: request.emailid }, (err,  regdata) => {
         if ( regdata) {
             if ( regdata.password == request.password) {
                 res.send({ "success": true,  regdata:  regdata });
@@ -63,6 +65,42 @@ app.post("/adminlogin",async(req,res)=>{
         }
     }) 
 })
+
+
+app.post("/addtocart",async(req,res)=>{
+    const data=req.body
+    console.log(data)
+    const ob=new cartModel(data)
+    ob.save((error,data)=>{
+        if(error)
+        {
+            res.send("error occured")
+        }
+        else
+        {
+            res.send(data)
+            console.log("hai")
+        }
+    }) 
+})
+
+app.post("/getproducts",async(req,res)=>{
+    console.log(req.body)
+    cartModel.find({email:req.body.email},
+        (error,data)=>{
+            if(error){
+                res.send(error)
+                
+            }
+            else{
+                res.send(data)
+                console.log(data)
+            }
+        }
+    )
+    
+})
+
 
 
 
@@ -161,7 +199,18 @@ app.put('/update/:id',function(req,res){
     )})
   })
 
-
+  app.delete('/removeproduct/:id',function(req,res){
+    const id = req.params.id;
+    cartModel.findByIdAndDelete(id,(error,data)=>{
+       if(error){
+        res.send(error)
+       }else{
+        res.status(200).json({
+            msg:data
+        })
+       }
+    })
+})
 
 
 app.listen(4000,()=>{console.log("server running at http://localhost:4000")})
